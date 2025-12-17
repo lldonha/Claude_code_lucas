@@ -1,0 +1,36 @@
+{
+  "description": "Configuração de MCP Servers para o workspace JARVIS",
+  "servers": {
+    "filesystem": {
+      "description": "Acesso ao sistema de arquivos local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "fetch": {
+      "description": "Requisições HTTP/Web",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "postgres": {
+      "description": "Conexão com PostgreSQL",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${POSTGRES_URL}"
+      }
+    },
+    "github": {
+      "description": "Integração com GitHub",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  },
+  "notes": [
+    "Configure as variáveis de ambiente no arquivo .env",
+    "Use 'docker mcp gateway' para o MCP Gateway local",
+    "Para adicionar mais servers, consulte: https://github.com/modelcontextprotocol/servers"
+  ]
+}

@@ -1,0 +1,39 @@
+# Ambiente
+.env
+.env.local
+*.env
+
+# Secrets
+**/secrets/
+**/credentials/
+*.key
+*.pem
+
+# Output gerado
+output/
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Temporários
+*.tmp
+*.temp
+~$*

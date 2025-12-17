@@ -1,0 +1,59 @@
+{
+  "name": "lldonha-workspace",
+  "version": "1.0.0",
+  "description": "Workspace pessoal do Lucas (lldonha) com skills e agentes especializados para engenharia, automação e produtividade",
+  "author": "Lucas (lldonha)",
+  "repository": "https://github.com/lldonha/Claude_code_lucas",
+  "skills": [
+    {
+      "name": "pericias",
+      "path": "skills/pericias/SKILL.md",
+      "description": "Templates e orientações para laudos periciais e documentação técnica de engenharia"
+    },
+    {
+      "name": "n8n-automation",
+      "path": "skills/n8n-automation/SKILL.md",
+      "description": "Padrões e templates para criar workflows de automação no n8n"
+    },
+    {
+      "name": "document-creation",
+      "path": "skills/document-creation/SKILL.md",
+      "description": "Templates para criar documentos profissionais formatados"
+    },
+    {
+      "name": "data-analysis",
+      "path": "skills/data-analysis/SKILL.md",
+      "description": "Frameworks e técnicas para análise de dados e visualizações"
+    }
+  ],
+  "agents": [
+    {
+      "name": "perito-tecnico",
+      "path": "agents/perito-tecnico/AGENT.md",
+      "description": "Especialista em laudos periciais e documentação técnica"
+    },
+    {
+      "name": "assistente-pessoal",
+      "path": "agents/assistente-pessoal/AGENT.md",
+      "description": "Assistente para calendário, tarefas e produtividade"
+    },
+    {
+      "name": "analista-dados",
+      "path": "agents/analista-dados/AGENT.md",
+      "description": "Especialista em análise de dados e dashboards"
+    },
+    {
+      "name": "social-media",
+      "path": "agents/social-media/AGENT.md",
+      "description": "Especialista em criação de conteúdo e redes sociais"
+    }
+  ],
+  "keywords": [
+    "engenharia",
+    "pericias",
+    "automacao",
+    "n8n",
+    "produtividade",
+    "analise-dados"
+  ]
+}
