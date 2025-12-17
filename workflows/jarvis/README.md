@@ -1,47 +1,76 @@
-# JARVIS v3 - Dual Interface + Vision
+# JARVIS Workflows
+
+Workflows n8n do assistente JARVIS.
+
+## Workflows Disponiveis
+
+### 1. JARVIS v3 - Dual Interface + Vision
+**ID:** `xSjW1LDJxZPMAqrU`
+**Arquivo:** `jarvis-v3-dual-interface.json`
 
 Assistente inteligente com suporte a Telegram e Chat n8n nativo.
 
-## Funcionalidades
+**Funcionalidades:**
+- Telegram Trigger (texto, audio, imagem)
+- Chat n8n nativo
+- Transcricao de audio com Gemini 2.0 Flash
+- Analise de imagem com Gemini 2.5 Pro (Vision)
+- AI Agent com Claude Code SSH Tool
+- Memoria PostgreSQL persistente
+- Roteamento automatico de resposta
 
-- **Telegram Trigger**: Recebe texto, audio e imagens
-- **Chat n8n nativo**: Interface de chat integrada
-- **Transcricao de Audio**: Gemini 2.0 Flash
-- **Analise de Imagem**: Gemini 2.5 Pro (Vision)
-- **AI Agent**: Com Claude Code SSH Tool
-- **Memoria**: PostgreSQL persistente por sessao
-- **Roteamento Automatico**: Entrada define saida
+**URL:** https://n8n.lldonha.com/workflow/xSjW1LDJxZPMAqrU
+
+---
+
+### 2. JARVIS Monitor v1
+**ID:** `3wYi0Am7KUn5j3xV`
+**Arquivo:** `jarvis-monitor-v1.json`
+
+Monitoramento automatico do JARVIS v3 com analise inteligente.
+
+**Funcionalidades:**
+- Monitoramento de erros a cada 5 minutos
+- Analise automatica com Claude Code SSH Tool
+- Decisao inteligente: corrigir ou notificar
+- Notificacao via Telegram
+- Relatorio diario as 9h
+
+**URL:** https://n8n.lldonha.com/workflow/3wYi0Am7KUn5j3xV
+
+---
 
 ## Arquitetura
 
 ```
-Telegram/Chat --> Detectar Tipo --> Processar --> AI Agent --> Responder
-                       |                             |
-                  Audio? Imagem?              Claude Code SSH
-                       |                             |
-                  Gemini API                 Acesso ao Sistema
+┌─────────────────────────────────────────────────────────────┐
+│                      JARVIS v3                               │
+│  Telegram/Chat → Processar → AI Agent → Responder           │
+│                      ↓                                       │
+│              Claude Code SSH Tool                            │
+│                      ↓                                       │
+│            Acesso ao Sistema (n8n, arquivos, etc)           │
+└─────────────────────────────────────────────────────────────┘
+                         ↑
+                    Monitorado por
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   JARVIS Monitor v1                          │
+│  Schedule (5min) → Claude Code → Analise → Telegram         │
+│  Schedule (9h)   → Claude Code → Relatorio → Telegram       │
+└─────────────────────────────────────────────────────────────┘
 ```
-
-## Fluxo de Dados
-
-1. **Entrada**: Telegram ou Chat trigger
-2. **Deteccao**: Verifica se e audio, imagem ou texto
-3. **Processamento**:
-   - Audio: Transcricao via Gemini
-   - Imagem: Analise via Gemini Vision
-   - Texto: Direto
-4. **AI Agent**: Processa com memoria e ferramentas
-5. **Saida**: Roteia para origem (Telegram/Chat)
 
 ## Dependencias
 
 ### Credenciais Necessarias
-- `telegramApi`: Bot do Telegram (TEST)
-- `googlePalmApi`: API do Google Gemini (LLDONHA)
-- `postgres`: Banco PostgreSQL (Jarvis)
+- `telegramApi`: Bot do Telegram
+- `googlePalmApi`: API do Google Gemini
+- `postgres`: Banco PostgreSQL
 
 ### Workflows Auxiliares
-- `t4Mv1Ko6FptZs4fK`: Claude Code SSH Tool
+- `PAHq9uOzVd8l9ybX`: Claude Code SSH Tool v2
+- `t4Mv1Ko6FptZs4fK`: Claude Code SSH Tool (original)
 - `1FRDFNWj1QfDqWfH`: Error Workflow
 
 ### PostgreSQL
@@ -50,24 +79,23 @@ Telegram/Chat --> Detectar Tipo --> Processar --> AI Agent --> Responder
 
 ## Configuracao
 
-1. Configure as credenciais no n8n
-2. Ajuste o bot do Telegram
-3. Configure o PostgreSQL
-4. Ative o workflow
+1. Importe os workflows no n8n
+2. Configure as credenciais
+3. Ajuste os IDs de workflow nos nodes
+4. Ative os workflows
 
-## Arquivos
+## Versoes
 
-- `jarvis-v3-dual-interface.json` - Workflow completo para importar no n8n
-
-## URL de Producao
-
-https://n8n.lldonha.com/workflow/xSjW1LDJxZPMAqrU
-
-## Versao
-
+### JARVIS v3
 - **v3.0.0** - 17/12/2025
   - Dual Interface (Telegram + Chat)
   - Vision (analise de imagens)
   - Audio transcription
   - PostgreSQL memory
-  - Error handling com roteamento
+  - Error handling
+
+### JARVIS Monitor v1
+- **v1.0.0** - 17/12/2025
+  - Monitoramento de erros
+  - Analise com Claude Code
+  - Relatorio diario

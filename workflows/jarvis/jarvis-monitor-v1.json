@@ -1,0 +1,161 @@
+{
+  "name": "JARVIS Monitor v1",
+  "id": "3wYi0Am7KUn5j3xV",
+  "description": "Monitora erros do JARVIS v3, analisa com Claude Code e notifica via Telegram",
+  "version": "1.0.0",
+  "createdAt": "2025-12-17T23:21:38.395Z",
+  "features": [
+    "Monitoramento de erros a cada 5 minutos",
+    "Analise automatica com Claude Code SSH Tool",
+    "Notificacao via Telegram",
+    "Relatorio diario as 9h"
+  ],
+  "monitoredWorkflow": {
+    "id": "xSjW1LDJxZPMAqrU",
+    "name": "JARVIS v3 - Dual Interface + Vision"
+  },
+  "nodes": [
+    {
+      "id": "sticky-info",
+      "name": "Info",
+      "parameters": {
+        "color": 4,
+        "content": "## JARVIS Monitor v1\n\n**Funcoes:**\n- Monitora erros do JARVIS v3\n- Analisa com Claude Code se e corrigivel\n- Notifica via Telegram\n- Relatorio diario de execucoes\n\n**Workflow Monitorado:**\n- ID: xSjW1LDJxZPMAqrU\n- Nome: JARVIS v3",
+        "height": 280,
+        "width": 300
+      },
+      "position": [-200, 0],
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1
+    },
+    {
+      "id": "schedule-erros",
+      "name": "Verificar Erros (5min)",
+      "parameters": {
+        "rule": {"interval": [{"field": "minutes", "minutesInterval": 5}]}
+      },
+      "position": [200, 200],
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2
+    },
+    {
+      "id": "schedule-relatorio",
+      "name": "Relatorio Diario (9h)",
+      "parameters": {
+        "rule": {"interval": [{"expression": "0 9 * * *", "field": "cronExpression"}]}
+      },
+      "position": [200, 500],
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2
+    },
+    {
+      "id": "set-config",
+      "name": "Config Monitor",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "wf_id", "name": "workflow_id", "type": "string", "value": "xSjW1LDJxZPMAqrU"},
+            {"id": "wf_name", "name": "workflow_name", "type": "string", "value": "JARVIS v3"},
+            {"id": "chat_id", "name": "telegram_chat_id", "type": "string", "value": "7416232272"},
+            {"id": "mode", "name": "mode", "type": "string", "value": "error_check"},
+            {"id": "query", "name": "query", "type": "string", "value": "Verifique as ultimas 10 execucoes do workflow JARVIS v3 (ID: xSjW1LDJxZPMAqrU) no n8n. Se houver erros recentes (ultimos 5 minutos), analise cada um e responda: 1) O que causou o erro 2) Se e possivel corrigir automaticamente 3) Qual seria a correcao. Se nao houver erros, responda apenas: Sem erros nos ultimos 5 minutos."}
+          ]
+        },
+        "options": {}
+      },
+      "position": [400, 200],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "id": "set-config-relatorio",
+      "name": "Config Relatorio",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "wf_id", "name": "workflow_id", "type": "string", "value": "xSjW1LDJxZPMAqrU"},
+            {"id": "wf_name", "name": "workflow_name", "type": "string", "value": "JARVIS v3"},
+            {"id": "chat_id", "name": "telegram_chat_id", "type": "string", "value": "7416232272"},
+            {"id": "mode", "name": "mode", "type": "string", "value": "daily_report"},
+            {"id": "query", "name": "query", "type": "string", "value": "Gere um relatorio humanizado das execucoes do workflow JARVIS v3 (ID: xSjW1LDJxZPMAqrU) das ultimas 24 horas. Inclua: total de execucoes, quantas com sucesso, quantas com erro, tempo medio de execucao, e um resumo geral do desempenho. Formate para Telegram com emojis."}
+          ]
+        },
+        "options": {}
+      },
+      "position": [400, 500],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "id": "claude-analise",
+      "name": "Claude Analisa",
+      "parameters": {
+        "description": "Busca erros e analisa se pode corrigir",
+        "workflowId": {"__rl": true, "mode": "id", "value": "PAHq9uOzVd8l9ybX"},
+        "workflowInputs": {
+          "assignments": [{"id": "query-input", "name": "query", "type": "string", "value": "={{ $json.query }}"}],
+          "mappingMode": "defineBelow",
+          "value": {}
+        }
+      },
+      "position": [600, 200],
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2
+    },
+    {
+      "id": "claude-relatorio",
+      "name": "Claude Relatorio",
+      "parameters": {
+        "description": "Gera relatorio diario das execucoes",
+        "workflowId": {"__rl": true, "mode": "id", "value": "PAHq9uOzVd8l9ybX"},
+        "workflowInputs": {
+          "assignments": [{"id": "query-input", "name": "query", "type": "string", "value": "={{ $json.query }}"}],
+          "mappingMode": "defineBelow",
+          "value": {}
+        }
+      },
+      "position": [600, 500],
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2
+    },
+    {
+      "credentials": {"telegramApi": {"id": "3JTycTWIfeAr4IeZ", "name": "TEST"}},
+      "id": "telegram-resultado",
+      "name": "Enviar Telegram",
+      "parameters": {
+        "additionalFields": {"appendAttribution": false},
+        "chatId": "={{ $('Config Monitor').item.json.telegram_chat_id }}",
+        "text": "=🤖 *JARVIS Monitor*\n\n{{ $json.output }}"
+      },
+      "position": [800, 200],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2
+    },
+    {
+      "credentials": {"telegramApi": {"id": "3JTycTWIfeAr4IeZ", "name": "TEST"}},
+      "id": "telegram-relatorio",
+      "name": "Enviar Relatorio",
+      "parameters": {
+        "additionalFields": {"appendAttribution": false, "parse_mode": "Markdown"},
+        "chatId": "={{ $('Config Relatorio').item.json.telegram_chat_id }}",
+        "text": "={{ $json.output }}"
+      },
+      "position": [800, 500],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2
+    }
+  ],
+  "connections": {
+    "Verificar Erros (5min)": {"main": [[{"node": "Config Monitor", "type": "main", "index": 0}]]},
+    "Relatorio Diario (9h)": {"main": [[{"node": "Config Relatorio", "type": "main", "index": 0}]]},
+    "Config Monitor": {"main": [[{"node": "Claude Analisa", "type": "main", "index": 0}]]},
+    "Config Relatorio": {"main": [[{"node": "Claude Relatorio", "type": "main", "index": 0}]]},
+    "Claude Analisa": {"main": [[{"node": "Enviar Telegram", "type": "main", "index": 0}]]},
+    "Claude Relatorio": {"main": [[{"node": "Enviar Relatorio", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  }
+}
