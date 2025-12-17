@@ -1,0 +1,609 @@
+{
+  "name": "JARVIS v3 - Dual Interface + Vision",
+  "id": "xSjW1LDJxZPMAqrU",
+  "description": "Assistente JARVIS com suporte a Telegram (texto, audio, imagem) e Chat n8n nativo",
+  "version": "3.0.0",
+  "createdAt": "2025-12-17T18:45:01.303Z",
+  "updatedAt": "2025-12-17T22:54:57.648Z",
+  "features": [
+    "Telegram Trigger (texto, audio, imagem)",
+    "Chat n8n nativo",
+    "Transcricao de audio com Gemini",
+    "Analise de imagem com Gemini Vision",
+    "AI Agent com Claude Code SSH Tool",
+    "Memoria PostgreSQL persistente",
+    "Roteamento automatico de resposta"
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## JARVIS v3 - Dual Interface + Vision\n\n**Entradas:**\n- Telegram (texto + audio + imagem)\n- Chat n8n nativo\n\n**Funcionalidades:**\n- Transcricao de audio com Gemini\n- Analise de imagem com Gemini Vision\n- AI Agent com Claude Code SSH\n- Memoria PostgreSQL persistente\n- Roteamento automatico de resposta\n\n**Regra:** Entrada define saida!\n- Telegram -> responde no Telegram\n- Chat -> responde no Chat",
+        "height": 420,
+        "width": 400,
+        "color": 5
+      },
+      "id": "sticky-info",
+      "name": "Info",
+      "position": [-368, 48],
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "position": [80, 304],
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "webhookId": "jarvis-v3-telegram",
+      "credentials": {
+        "telegramApi": {
+          "id": "3JTycTWIfeAr4IeZ",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "chat-trigger",
+      "name": "Chat Trigger",
+      "position": [96, 768],
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "webhookId": "jarvis-v3-chat"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "audio-check",
+              "leftValue": "={{ $json.message.voice?.file_id }}",
+              "operator": {"operation": "notEmpty", "type": "string"},
+              "rightValue": ""
+            },
+            {
+              "id": "audio-check-2",
+              "leftValue": "={{ $json.message.audio?.file_id }}",
+              "operator": {"operation": "notEmpty", "type": "string"},
+              "rightValue": ""
+            }
+          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}
+        },
+        "options": {}
+      },
+      "id": "check-audio",
+      "name": "E Audio?",
+      "position": [304, 304],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "imagem-check",
+              "leftValue": "={{ $json.message.photo?.[0]?.file_id }}",
+              "operator": {"operation": "notEmpty", "type": "string"},
+              "rightValue": ""
+            },
+            {
+              "id": "86e8fa47-972d-4ac6-8718-9d80afd7d2bc",
+              "leftValue": "={{ $json.message.document?.mime_type }}",
+              "operator": {"operation": "startsWith", "type": "string"},
+              "rightValue": "image/"
+            }
+          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}
+        },
+        "options": {}
+      },
+      "id": "check-imagem",
+      "name": "E Imagem?",
+      "position": [528, 400],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice?.file_id || $json.message.audio?.file_id }}",
+        "additionalFields": {}
+      },
+      "id": "download-audio",
+      "name": "Download Audio",
+      "position": [528, 160],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "0fa1ffb5-9e2c-498c-ad63-0f6237bd1e25",
+      "credentials": {
+        "telegramApi": {
+          "id": "3JTycTWIfeAr4IeZ",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {"__rl": true, "mode": "list", "value": "models/gemini-2.0-flash"},
+        "inputType": "binary",
+        "options": {}
+      },
+      "id": "transcrever-gemini",
+      "name": "Transcrever Gemini",
+      "position": [720, 160],
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gCq1iML5MAqIgvyj",
+          "name": "LLDONHA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "source", "name": "source", "type": "string", "value": "telegram"},
+            {"id": "prompt", "name": "user_message", "type": "string", "value": "={{ $json.content.parts[0].text }}"},
+            {"id": "chat_id", "name": "chat_id", "type": "string", "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}"},
+            {"id": "session_id", "name": "session_id", "type": "string", "value": "=telegram_{{ $('Telegram Trigger').item.json.message.chat.id }}"},
+            {"id": "username", "name": "username", "type": "string", "value": "={{ $('Telegram Trigger').item.json.message.from.username || $('Telegram Trigger').item.json.message.from.first_name }}"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "preparar-audio",
+      "name": "Preparar Audio",
+      "position": [928, 160],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo.slice(-1)[0].file_id }}",
+        "additionalFields": {}
+      },
+      "id": "download-imagem",
+      "name": "Download Imagem",
+      "position": [720, 320],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "7173ec33-c176-45eb-85fb-4e9d34ea6559",
+      "credentials": {
+        "telegramApi": {
+          "id": "3JTycTWIfeAr4IeZ",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {"__rl": true, "value": "models/gemini-2.5-pro", "mode": "list", "cachedResultName": "models/gemini-2.5-pro"},
+        "text": "={{ $('Telegram Trigger').item.json.message.caption || 'Descreva detalhadamente o que você vê nesta imagem. Se houver texto, transcreva-o.' }}",
+        "inputType": "binary",
+        "options": {}
+      },
+      "id": "analisar-imagem",
+      "name": "Analisar Imagem (Vision)",
+      "position": [928, 320],
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gCq1iML5MAqIgvyj",
+          "name": "LLDONHA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "source", "name": "source", "type": "string", "value": "telegram"},
+            {"id": "prompt", "name": "user_message", "type": "string", "value": "=O usuario enviou uma imagem. {{ $('Telegram Trigger').item.json.message.caption ? 'Legenda: ' + $('Telegram Trigger').item.json.message.caption + '. ' : '' }}Analise da imagem: {{ $json.content.parts[0].text }}"},
+            {"id": "chat_id", "name": "chat_id", "type": "string", "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}"},
+            {"id": "session_id", "name": "session_id", "type": "string", "value": "=telegram_{{ $('Telegram Trigger').item.json.message.chat.id }}"},
+            {"id": "username", "name": "username", "type": "string", "value": "={{ $('Telegram Trigger').item.json.message.from.username || $('Telegram Trigger').item.json.message.from.first_name }}"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "preparar-imagem",
+      "name": "Preparar Imagem",
+      "position": [1120, 320],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "source", "name": "source", "type": "string", "value": "telegram"},
+            {"id": "prompt", "name": "user_message", "type": "string", "value": "={{ $json.message.text }}"},
+            {"id": "chat_id", "name": "chat_id", "type": "string", "value": "={{ $json.message.chat.id }}"},
+            {"id": "session_id", "name": "session_id", "type": "string", "value": "=telegram_{{ $json.message.chat.id }}"},
+            {"id": "username", "name": "username", "type": "string", "value": "={{ $json.message.from.username || $json.message.from.first_name }}"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "preparar-texto-tg",
+      "name": "Preparar Texto TG",
+      "position": [720, 480],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "source", "name": "source", "type": "string", "value": "chat"},
+            {"id": "prompt", "name": "user_message", "type": "string", "value": "={{ $json.chatInput }}"},
+            {"id": "chat_id", "name": "chat_id", "type": "string", "value": ""},
+            {"id": "session_id", "name": "session_id", "type": "string", "value": "=chat_{{ $json.sessionId }}"},
+            {"id": "username", "name": "username", "type": "string", "value": "Lucas"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "preparar-chat",
+      "name": "Preparar Chat",
+      "position": [512, 752],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {},
+      "id": "merge-inputs",
+      "name": "Merge Inputs",
+      "position": [1344, 448],
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "is-telegram",
+              "leftValue": "={{ $json.source }}",
+              "operator": {"operation": "equals", "type": "string"},
+              "rightValue": "telegram"
+            }
+          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}
+        },
+        "options": {}
+      },
+      "id": "check-source-aviso",
+      "name": "E Telegram?",
+      "position": [1552, 448],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "Processando sua solicitacao...",
+        "additionalFields": {"appendAttribution": false}
+      },
+      "id": "aviso-processando",
+      "name": "Aviso Processando",
+      "position": [1744, 320],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "b4adc3ad-b9e3-408f-9bde-d4bf8b80382e",
+      "credentials": {
+        "telegramApi": {
+          "id": "3JTycTWIfeAr4IeZ",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "source", "name": "source", "type": "string", "value": "={{ $('E Telegram?').item.json.source }}"},
+            {"id": "user_message", "name": "user_message", "type": "string", "value": "={{ $('E Telegram?').item.json.user_message }}"},
+            {"id": "chat_id", "name": "chat_id", "type": "string", "value": "={{ $('E Telegram?').item.json.chat_id }}"},
+            {"id": "session_id", "name": "session_id", "type": "string", "value": "={{ $('E Telegram?').item.json.session_id }}"},
+            {"id": "username", "name": "username", "type": "string", "value": "={{ $('E Telegram?').item.json.username }}"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "restaurar-dados",
+      "name": "Restaurar Dados",
+      "position": [1744, 448],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {},
+      "id": "merge-pre-agent",
+      "name": "Merge Pre-Agent",
+      "position": [1952, 448],
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_message }}",
+        "options": {
+          "systemMessage": "Voce e JARVIS, assistente inteligente de Lucas com acesso ao Claude Code via SSH.\n\n## REGRA PRINCIPAL\nVoce TEM que usar a ferramenta 'Claude Code SSH Tool' para QUALQUER tarefa que envolva:\n- Acessar, ler ou modificar arquivos\n- Executar comandos no sistema\n- Consultar dados do n8n, workflows ou automacoes\n- Programar, criar ou editar codigo\n- Analisar projetos ou repositorios\n- Buscar informacoes em logs ou bancos de dados\n- Qualquer operacao que precise de acesso ao computador\n\n## QUANDO NAO USAR A FERRAMENTA\n- Perguntas simples de conversa (oi, tudo bem, etc)\n- Perguntas sobre conhecimento geral\n- Explicacoes conceituais\n- Analise de imagens (ja foi processada antes de chegar aqui)\n\n## IMAGENS\nQuando o usuario enviar uma imagem, voce recebera a analise ja feita. Responda com base nessa analise.\n\n## ENCERRAR CONVERSA\nQuando o usuario disser 'tchau', 'encerrar', 'finalizar', 'ate mais' ou similar:\n- Responda com uma despedida amigavel\n\n## COMO USAR FERRAMENTAS\nEnvie a tarefa completa como 'query' para a ferramenta.\nSEMPRE use a ferramenta quando o usuario pedir algo que precise de acesso ao sistema!"
+        }
+      },
+      "alwaysOutputData": true,
+      "id": "ai-agent",
+      "name": "AI Agent",
+      "position": [2144, 448],
+      "retryOnFail": true,
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "gemini-model",
+      "name": "Google Gemini Chat Model",
+      "position": [1984, 688],
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gCq1iML5MAqIgvyj",
+          "name": "LLDONHA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}",
+        "tableName": "jarvis_chat_history"
+      },
+      "id": "postgres-memory",
+      "name": "Postgres Chat Memory",
+      "position": [2144, 688],
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "credentials": {
+        "postgres": {
+          "id": "o02IT59e2gPCmsi7",
+          "name": "Jarvis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "FERRAMENTA PRINCIPAL - Executa o Claude Code CLI via SSH para acessar o computador do Lucas. Use para: consultar n8n/workflows, ler/criar/editar arquivos, executar comandos, analisar dados, programar, buscar em logs, QUALQUER tarefa que precise de acesso ao sistema. Envie a tarefa como 'query'.",
+        "workflowId": {"__rl": true, "mode": "id", "value": "t4Mv1Ko6FptZs4fK"},
+        "workflowInputs": {"mappingMode": "defineBelow", "value": {}}
+      },
+      "id": "claude-code-tool",
+      "name": "Claude Code SSH Tool",
+      "position": [2304, 688],
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "is-telegram-output",
+              "leftValue": "={{ $('Merge Pre-Agent').item.json.source }}",
+              "operator": {"operation": "equals", "type": "string"},
+              "rightValue": "telegram"
+            }
+          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}
+        },
+        "options": {}
+      },
+      "id": "route-output",
+      "name": "Rotear Saida",
+      "position": [2384, 368],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Merge Pre-Agent').item.json.chat_id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {"appendAttribution": false}
+      },
+      "id": "enviar-telegram",
+      "name": "Enviar Telegram",
+      "position": [2624, 288],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "becedf6b-673b-4d6e-8959-de9400cbe449",
+      "credentials": {
+        "telegramApi": {
+          "id": "3JTycTWIfeAr4IeZ",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop-chat",
+      "name": "Chat Auto-Responde",
+      "position": [2624, 448],
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "is-telegram-error",
+              "leftValue": "={{ $('Merge Pre-Agent').item.json.source }}",
+              "operator": {"operation": "equals", "type": "string"},
+              "rightValue": "telegram"
+            }
+          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}
+        },
+        "options": {}
+      },
+      "id": "route-error",
+      "name": "Rotear Erro",
+      "position": [2384, 560],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Merge Pre-Agent').item.json.chat_id }}",
+        "text": "Ocorreu um erro ao processar sua solicitacao. Por favor, tente novamente.",
+        "additionalFields": {"appendAttribution": false}
+      },
+      "id": "tratar-erro-tg",
+      "name": "Erro Telegram",
+      "position": [2624, 608],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "webhookId": "9358aeee-c697-49fd-b4a4-b46d26527425",
+      "credentials": {
+        "telegramApi": {
+          "id": "3JTycTWIfeAr4IeZ",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop-error-chat",
+      "name": "Erro Chat (auto)",
+      "position": [2624, 720],
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [{"index": 0, "node": "Rotear Saida", "type": "main"}],
+        [{"index": 0, "node": "Rotear Erro", "type": "main"}]
+      ]
+    },
+    "Analisar Imagem (Vision)": {
+      "main": [[{"index": 0, "node": "Preparar Imagem", "type": "main"}]]
+    },
+    "Aviso Processando": {
+      "main": [[{"index": 0, "node": "Restaurar Dados", "type": "main"}]]
+    },
+    "Chat Trigger": {
+      "main": [[{"index": 0, "node": "Preparar Chat", "type": "main"}]]
+    },
+    "Claude Code SSH Tool": {
+      "ai_tool": [[{"index": 0, "node": "AI Agent", "type": "ai_tool"}]]
+    },
+    "Download Audio": {
+      "main": [[{"index": 0, "node": "Transcrever Gemini", "type": "main"}]]
+    },
+    "Download Imagem": {
+      "main": [[{"index": 0, "node": "Analisar Imagem (Vision)", "type": "main"}]]
+    },
+    "E Audio?": {
+      "main": [
+        [{"index": 0, "node": "Download Audio", "type": "main"}],
+        [{"index": 0, "node": "E Imagem?", "type": "main"}]
+      ]
+    },
+    "E Imagem?": {
+      "main": [
+        [{"index": 0, "node": "Download Imagem", "type": "main"}],
+        [{"index": 0, "node": "Preparar Texto TG", "type": "main"}]
+      ]
+    },
+    "E Telegram?": {
+      "main": [
+        [{"index": 0, "node": "Aviso Processando", "type": "main"}],
+        [{"index": 1, "node": "Merge Pre-Agent", "type": "main"}]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [[{"index": 0, "node": "AI Agent", "type": "ai_languageModel"}]]
+    },
+    "Merge Inputs": {
+      "main": [[{"index": 0, "node": "E Telegram?", "type": "main"}]]
+    },
+    "Merge Pre-Agent": {
+      "main": [[{"index": 0, "node": "AI Agent", "type": "main"}]]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [[{"index": 0, "node": "AI Agent", "type": "ai_memory"}]]
+    },
+    "Preparar Audio": {
+      "main": [[{"index": 0, "node": "Merge Inputs", "type": "main"}]]
+    },
+    "Preparar Chat": {
+      "main": [[{"index": 1, "node": "Merge Inputs", "type": "main"}]]
+    },
+    "Preparar Imagem": {
+      "main": [[{"index": 0, "node": "Merge Inputs", "type": "main"}]]
+    },
+    "Preparar Texto TG": {
+      "main": [[{"index": 0, "node": "Merge Inputs", "type": "main"}]]
+    },
+    "Restaurar Dados": {
+      "main": [[{"index": 0, "node": "Merge Pre-Agent", "type": "main"}]]
+    },
+    "Rotear Erro": {
+      "main": [
+        [{"index": 0, "node": "Erro Telegram", "type": "main"}],
+        [{"index": 0, "node": "Erro Chat (auto)", "type": "main"}]
+      ]
+    },
+    "Rotear Saida": {
+      "main": [
+        [{"index": 0, "node": "Enviar Telegram", "type": "main"}],
+        [{"index": 0, "node": "Chat Auto-Responde", "type": "main"}]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [[{"index": 0, "node": "E Audio?", "type": "main"}]]
+    },
+    "Transcrever Gemini": {
+      "main": [[{"index": 0, "node": "Preparar Audio", "type": "main"}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "1FRDFNWj1QfDqWfH"
+  }
+}
