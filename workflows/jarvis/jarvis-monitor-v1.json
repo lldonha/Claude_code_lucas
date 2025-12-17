@@ -1,14 +1,17 @@
 {
   "name": "JARVIS Monitor v1",
   "id": "3wYi0Am7KUn5j3xV",
-  "description": "Monitora erros do JARVIS v3, analisa com Claude Code e notifica via Telegram",
-  "version": "1.0.0",
+  "description": "Monitora JARVIS v3, analisa com Claude Code, salva no PostgreSQL e faz backup semanal no GitHub",
+  "version": "1.1.0",
   "createdAt": "2025-12-17T23:21:38.395Z",
+  "updatedAt": "2025-12-17T23:42:31.364Z",
   "features": [
     "Monitoramento de erros a cada 5 minutos",
     "Analise automatica com Claude Code SSH Tool",
-    "Notificacao via Telegram",
-    "Relatorio diario as 9h"
+    "Persistencia no PostgreSQL (30 dias)",
+    "Relatorio diario as 9h com limpeza automatica",
+    "Backup semanal no GitHub (domingo 10h)",
+    "Notificacao via Telegram"
   ],
   "monitoredWorkflow": {
     "id": "xSjW1LDJxZPMAqrU",
@@ -20,11 +23,11 @@
       "name": "Info",
       "parameters": {
         "color": 4,
-        "content": "## JARVIS Monitor v1\n\n**Funcoes:**\n- Monitora erros do JARVIS v3\n- Analisa com Claude Code se e corrigivel\n- Notifica via Telegram\n- Relatorio diario de execucoes\n\n**Workflow Monitorado:**\n- ID: xSjW1LDJxZPMAqrU\n- Nome: JARVIS v3",
-        "height": 280,
+        "content": "## JARVIS Monitor v1\n\n**Funcoes:**\n- Monitora erros (5min)\n- Relatorio diario (9h) + limpeza\n- Relatorio semanal (dom 10h) + GitHub\n- Salva no PostgreSQL (30 dias)\n\n**Workflow Monitorado:**\n- ID: xSjW1LDJxZPMAqrU\n- Nome: JARVIS v3",
+        "height": 340,
         "width": 300
       },
-      "position": [-200, 0],
+      "position": [-208, 0],
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1
     },
@@ -34,7 +37,7 @@
       "parameters": {
         "rule": {"interval": [{"field": "minutes", "minutesInterval": 5}]}
       },
-      "position": [200, 200],
+      "position": [208, 208],
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2
     },
@@ -44,7 +47,17 @@
       "parameters": {
         "rule": {"interval": [{"expression": "0 9 * * *", "field": "cronExpression"}]}
       },
-      "position": [200, 500],
+      "position": [208, 512],
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2
+    },
+    {
+      "id": "schedule-semanal",
+      "name": "Backup Semanal (dom 10h)",
+      "parameters": {
+        "rule": {"interval": [{"expression": "0 10 * * 0", "field": "cronExpression"}]}
+      },
+      "position": [208, 816],
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2
     },
@@ -63,7 +76,7 @@
         },
         "options": {}
       },
-      "position": [400, 200],
+      "position": [400, 208],
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4
     },
@@ -82,7 +95,26 @@
         },
         "options": {}
       },
-      "position": [400, 500],
+      "position": [400, 512],
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4
+    },
+    {
+      "id": "set-config-semanal",
+      "name": "Config Semanal",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "wf_id", "name": "workflow_id", "type": "string", "value": "xSjW1LDJxZPMAqrU"},
+            {"id": "wf_name", "name": "workflow_name", "type": "string", "value": "JARVIS v3"},
+            {"id": "chat_id", "name": "telegram_chat_id", "type": "string", "value": "7416232272"},
+            {"id": "mode", "name": "mode", "type": "string", "value": "weekly_backup"},
+            {"id": "query", "name": "query", "type": "string", "value": "Faca o seguinte: 1) Gere um RELATORIO SEMANAL DETALHADO do workflow JARVIS v3 (ID: xSjW1LDJxZPMAqrU) dos ultimos 7 dias, incluindo: total de execucoes, taxa de sucesso, erros mais frequentes, tempo medio, tendencias, e recomendacoes. 2) Exporte o workflow JARVIS v3 atual para JSON. 3) No repositorio GitHub lldonha/Claude_code_lucas, crie uma nova branch chamada backup-YYYY-MM-DD (com a data de hoje). 4) Faca commit do workflow exportado em workflows/jarvis/backups/ e do relatorio em workflows/jarvis/reports/. 5) Retorne o link da branch criada e um resumo do que foi feito."}
+          ]
+        },
+        "options": {}
+      },
+      "position": [400, 816],
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4
     },
@@ -98,7 +130,7 @@
           "value": {}
         }
       },
-      "position": [600, 200],
+      "position": [624, 208],
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2
     },
@@ -114,9 +146,38 @@
           "value": {}
         }
       },
-      "position": [600, 500],
+      "position": [624, 512],
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2
+    },
+    {
+      "id": "claude-semanal",
+      "name": "Claude Backup GitHub",
+      "parameters": {
+        "description": "Gera relatorio semanal e faz backup no GitHub",
+        "workflowId": {"__rl": true, "mode": "id", "value": "PAHq9uOzVd8l9ybX"},
+        "workflowInputs": {
+          "assignments": [{"id": "query-input", "name": "query", "type": "string", "value": "={{ $json.query }}"}],
+          "mappingMode": "defineBelow",
+          "value": {}
+        }
+      },
+      "position": [624, 816],
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2
+    },
+    {
+      "credentials": {"postgres": {"id": "o02IT59e2gPCmsi7", "name": "Jarvis"}},
+      "id": "salvar-postgres",
+      "name": "Salvar no Postgres",
+      "parameters": {
+        "operation": "executeQuery",
+        "options": {},
+        "query": "INSERT INTO jarvis_executions (workflow_id, workflow_name, status, analysis, action_taken, created_at) VALUES ('{{ $('Config Monitor').item.json.workflow_id }}', '{{ $('Config Monitor').item.json.workflow_name }}', '{{ $json.output.includes('erro') ? 'error' : 'ok' }}', '{{ $json.output.replace(/'/g, \"''\") }}', 'monitored', NOW())"
+      },
+      "position": [848, 208],
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5
     },
     {
       "credentials": {"telegramApi": {"id": "3JTycTWIfeAr4IeZ", "name": "TEST"}},
@@ -125,11 +186,24 @@
       "parameters": {
         "additionalFields": {"appendAttribution": false},
         "chatId": "={{ $('Config Monitor').item.json.telegram_chat_id }}",
-        "text": "=🤖 *JARVIS Monitor*\n\n{{ $json.output }}"
+        "text": "=🤖 *JARVIS Monitor*\n\n{{ $('Claude Analisa').item.json.output }}"
       },
-      "position": [800, 200],
+      "position": [1072, 208],
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2
+    },
+    {
+      "credentials": {"postgres": {"id": "o02IT59e2gPCmsi7", "name": "Jarvis"}},
+      "id": "limpar-antigos",
+      "name": "Limpar >30 dias",
+      "parameters": {
+        "operation": "executeQuery",
+        "options": {},
+        "query": "DELETE FROM jarvis_executions WHERE created_at < NOW() - INTERVAL '30 days'"
+      },
+      "position": [848, 512],
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5
     },
     {
       "credentials": {"telegramApi": {"id": "3JTycTWIfeAr4IeZ", "name": "TEST"}},
@@ -138,9 +212,35 @@
       "parameters": {
         "additionalFields": {"appendAttribution": false, "parse_mode": "Markdown"},
         "chatId": "={{ $('Config Relatorio').item.json.telegram_chat_id }}",
-        "text": "={{ $json.output }}"
+        "text": "={{ $('Claude Relatorio').item.json.output }}\n\n_Registros antigos limpos: {{ $json.affectedRows || 0 }}_"
       },
-      "position": [800, 500],
+      "position": [1072, 512],
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2
+    },
+    {
+      "credentials": {"postgres": {"id": "o02IT59e2gPCmsi7", "name": "Jarvis"}},
+      "id": "salvar-semanal",
+      "name": "Salvar Semanal",
+      "parameters": {
+        "operation": "executeQuery",
+        "options": {},
+        "query": "INSERT INTO jarvis_executions (workflow_id, workflow_name, status, analysis, action_taken, created_at) VALUES ('{{ $('Config Semanal').item.json.workflow_id }}', '{{ $('Config Semanal').item.json.workflow_name }}', 'weekly_backup', '{{ $json.output.replace(/'/g, \"''\") }}', 'github_backup', NOW())"
+      },
+      "position": [848, 816],
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5
+    },
+    {
+      "credentials": {"telegramApi": {"id": "3JTycTWIfeAr4IeZ", "name": "TEST"}},
+      "id": "telegram-semanal",
+      "name": "Enviar Semanal",
+      "parameters": {
+        "additionalFields": {"appendAttribution": false, "parse_mode": "Markdown"},
+        "chatId": "={{ $('Config Semanal').item.json.telegram_chat_id }}",
+        "text": "=📅 *JARVIS - Backup Semanal*\n\n{{ $('Claude Backup GitHub').item.json.output }}"
+      },
+      "position": [1072, 816],
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2
     }
@@ -148,14 +248,26 @@
   "connections": {
     "Verificar Erros (5min)": {"main": [[{"node": "Config Monitor", "type": "main", "index": 0}]]},
     "Relatorio Diario (9h)": {"main": [[{"node": "Config Relatorio", "type": "main", "index": 0}]]},
+    "Backup Semanal (dom 10h)": {"main": [[{"node": "Config Semanal", "type": "main", "index": 0}]]},
     "Config Monitor": {"main": [[{"node": "Claude Analisa", "type": "main", "index": 0}]]},
     "Config Relatorio": {"main": [[{"node": "Claude Relatorio", "type": "main", "index": 0}]]},
-    "Claude Analisa": {"main": [[{"node": "Enviar Telegram", "type": "main", "index": 0}]]},
-    "Claude Relatorio": {"main": [[{"node": "Enviar Relatorio", "type": "main", "index": 0}]]}
+    "Config Semanal": {"main": [[{"node": "Claude Backup GitHub", "type": "main", "index": 0}]]},
+    "Claude Analisa": {"main": [[{"node": "Salvar no Postgres", "type": "main", "index": 0}]]},
+    "Claude Relatorio": {"main": [[{"node": "Limpar >30 dias", "type": "main", "index": 0}]]},
+    "Claude Backup GitHub": {"main": [[{"node": "Salvar Semanal", "type": "main", "index": 0}]]},
+    "Salvar no Postgres": {"main": [[{"node": "Enviar Telegram", "type": "main", "index": 0}]]},
+    "Limpar >30 dias": {"main": [[{"node": "Enviar Relatorio", "type": "main", "index": 0}]]},
+    "Salvar Semanal": {"main": [[{"node": "Enviar Semanal", "type": "main", "index": 0}]]}
   },
   "settings": {
     "executionOrder": "v1",
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true
+  },
+  "postgresql": {
+    "table": "jarvis_executions",
+    "schema": "CREATE TABLE IF NOT EXISTS jarvis_executions (id SERIAL PRIMARY KEY, execution_id VARCHAR(50), workflow_id VARCHAR(50), workflow_name VARCHAR(100), status VARCHAR(20), started_at TIMESTAMP, finished_at TIMESTAMP, duration_ms INTEGER, error_message TEXT, error_node VARCHAR(100), analysis TEXT, action_taken VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP); CREATE INDEX IF NOT EXISTS idx_jarvis_exec_workflow ON jarvis_executions(workflow_id); CREATE INDEX IF NOT EXISTS idx_jarvis_exec_status ON jarvis_executions(status); CREATE INDEX IF NOT EXISTS idx_jarvis_exec_created ON jarvis_executions(created_at);",
+    "retention": "30 days"
   }
 }

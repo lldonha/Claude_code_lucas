@@ -23,18 +23,19 @@ Assistente inteligente com suporte a Telegram e Chat n8n nativo.
 
 ---
 
-### 2. JARVIS Monitor v1
+### 2. JARVIS Monitor v1.1
 **ID:** `3wYi0Am7KUn5j3xV`
 **Arquivo:** `jarvis-monitor-v1.json`
 
-Monitoramento automatico do JARVIS v3 com analise inteligente.
+Monitoramento automatico do JARVIS v3 com analise inteligente e backup automatico.
 
 **Funcionalidades:**
 - Monitoramento de erros a cada 5 minutos
 - Analise automatica com Claude Code SSH Tool
-- Decisao inteligente: corrigir ou notificar
+- Persistencia no PostgreSQL (retencao de 30 dias)
+- Relatorio diario as 9h com limpeza automatica
+- Backup semanal no GitHub (domingo 10h)
 - Notificacao via Telegram
-- Relatorio diario as 9h
 
 **URL:** https://n8n.lldonha.com/workflow/3wYi0Am7KUn5j3xV
 
@@ -55,9 +56,23 @@ Monitoramento automatico do JARVIS v3 com analise inteligente.
                     Monitorado por
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                   JARVIS Monitor v1                          │
-│  Schedule (5min) → Claude Code → Analise → Telegram         │
-│  Schedule (9h)   → Claude Code → Relatorio → Telegram       │
+│                   JARVIS Monitor v1.1                        │
+│                                                              │
+│  Schedule (5min)  → Claude Code → PostgreSQL → Telegram     │
+│  Schedule (9h)    → Claude Code → Limpar 30d → Telegram     │
+│  Schedule (dom 10h) → Claude Code → GitHub → Telegram       │
+│                           ↓                                  │
+│                      PostgreSQL                              │
+│                  (jarvis_executions)                         │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+                    Backup Semanal
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│                GitHub (lldonha/Claude_code_lucas)            │
+│  - Branch: backup-YYYY-MM-DD                                 │
+│  - workflows/jarvis/backups/                                 │
+│  - workflows/jarvis/reports/                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -75,14 +90,48 @@ Monitoramento automatico do JARVIS v3 com analise inteligente.
 
 ### PostgreSQL
 - Database: `jarvis_db`
-- Tabela: `jarvis_chat_history`
+- Tabelas:
+  - `jarvis_chat_history` - Memoria do chat
+  - `jarvis_executions` - Historico de execucoes (30 dias)
+
+#### Schema jarvis_executions
+```sql
+CREATE TABLE IF NOT EXISTS jarvis_executions (
+    id SERIAL PRIMARY KEY,
+    execution_id VARCHAR(50),
+    workflow_id VARCHAR(50),
+    workflow_name VARCHAR(100),
+    status VARCHAR(20),
+    started_at TIMESTAMP,
+    finished_at TIMESTAMP,
+    duration_ms INTEGER,
+    error_message TEXT,
+    error_node VARCHAR(100),
+    analysis TEXT,
+    action_taken VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_jarvis_exec_workflow ON jarvis_executions(workflow_id);
+CREATE INDEX idx_jarvis_exec_status ON jarvis_executions(status);
+CREATE INDEX idx_jarvis_exec_created ON jarvis_executions(created_at);
+```
 
 ## Configuracao
 
 1. Importe os workflows no n8n
 2. Configure as credenciais
-3. Ajuste os IDs de workflow nos nodes
-4. Ative os workflows
+3. Crie a tabela `jarvis_executions` no PostgreSQL
+4. Ajuste os IDs de workflow nos nodes
+5. Ative os workflows
+
+## Agendamentos
+
+| Trigger | Horario | Funcao |
+|---------|---------|--------|
+| Verificar Erros | A cada 5 min | Monitora erros e analisa correcoes |
+| Relatorio Diario | 09:00 | Resumo 24h + limpeza >30 dias |
+| Backup Semanal | Domingo 10:00 | Relatorio 7 dias + backup GitHub |
 
 ## Versoes
 
@@ -95,7 +144,26 @@ Monitoramento automatico do JARVIS v3 com analise inteligente.
   - Error handling
 
 ### JARVIS Monitor v1
+- **v1.1.0** - 17/12/2025
+  - Backup semanal no GitHub
+  - Persistencia PostgreSQL
+  - Relatorio semanal detalhado
+  - Limpeza automatica >30 dias
 - **v1.0.0** - 17/12/2025
   - Monitoramento de erros
   - Analise com Claude Code
   - Relatorio diario
+
+---
+
+## Estrutura de Backups
+
+O backup semanal cria automaticamente:
+- Nova branch: `backup-YYYY-MM-DD`
+- Arquivo: `workflows/jarvis/backups/jarvis-v3-YYYY-MM-DD.json`
+- Relatorio: `workflows/jarvis/reports/weekly-YYYY-MM-DD.md`
+
+---
+
+*Workspace JARVIS - Lucas (lldonha)*
+*Dezembro 2025*
