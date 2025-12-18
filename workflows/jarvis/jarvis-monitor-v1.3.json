@@ -1,0 +1,44 @@
+{
+  "name": "JARVIS Monitor v1.3",
+  "id": "3wYi0Am7KUn5j3xV",
+  "description": "Monitor inteligente do JARVIS v3 com auto-correção, relatórios e backup no GitHub",
+  "version": "1.3.0",
+  "createdAt": "2025-12-17T23:21:38.395Z",
+  "updatedAt": "2025-12-18T00:00:00.000Z",
+  "features": [
+    "🚨 Error Trigger instantâneo (captura erros em tempo real)",
+    "⚙️ Classificação automática de erros (TIMEOUT, RATE_LIMIT, CONNECTION, AUTH, PERMISSION, VALIDATION)",
+    "🔄 Auto-correção para erros corrigíveis via Claude Code",
+    "💾 Backup automático antes de qualquer correção",
+    "📊 Relatório diário às 9h com limpeza de registros >30 dias",
+    "📅 Backup semanal no GitHub (domingo 10h)",
+    "📱 Notificação via Telegram",
+    "🗄️ Persistência PostgreSQL (jarvis_executions)"
+  ],
+  "subWorkflows": {
+    "claudeCodeSshTool": {
+      "id": "PAHq9uOzVd8l9ybX",
+      "name": "Claude Code SSH Tool v2",
+      "description": "Executa comandos no Claude Code CLI via SSH"
+    }
+  },
+  "monitoredWorkflow": {
+    "id": "xSjW1LDJxZPMAqrU",
+    "name": "JARVIS v3 - Dual Interface + Vision"
+  },
+  "errorClassification": {
+    "corrigivel": ["TIMEOUT", "RATE_LIMIT", "CONNECTION"],
+    "naoCorrigivel": ["AUTH", "PERMISSION", "VALIDATION", "UNKNOWN"]
+  },
+  "schedules": {
+    "errorTrigger": "Instantâneo (Error Trigger)",
+    "dailyReport": "0 9 * * * (todos os dias às 9h)",
+    "weeklyBackup": "0 10 * * 0 (domingo às 10h)"
+  },
+  "postgresql": {
+    "table": "jarvis_executions",
+    "retention": "30 dias",
+    "statusValues": ["auto_fixed", "error", "daily_report", "weekly_backup"]
+  },
+  "repository": "https://github.com/lldonha/Claude_code_lucas"
+}

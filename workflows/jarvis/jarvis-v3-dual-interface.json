@@ -2,9 +2,9 @@
   "name": "JARVIS v3 - Dual Interface + Vision",
   "id": "xSjW1LDJxZPMAqrU",
   "description": "Assistente JARVIS com suporte a Telegram (texto, audio, imagem) e Chat n8n nativo",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "createdAt": "2025-12-17T18:45:01.303Z",
-  "updatedAt": "2025-12-17T22:54:57.648Z",
+  "updatedAt": "2025-12-18T01:00:00.000Z",
   "features": [
     "Telegram Trigger (texto, audio, imagem)",
     "Chat n8n nativo",
@@ -604,6 +604,26 @@
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": true,
-    "errorWorkflow": "1FRDFNWj1QfDqWfH"
-  }
+    "errorWorkflow": "3wYi0Am7KUn5j3xV"
+  },
+  "subWorkflows": {
+    "claudeCodeSshTool": {
+      "id": "PAHq9uOzVd8l9ybX",
+      "name": "Claude Code SSH Tool v2",
+      "description": "Executa comandos no Claude Code CLI via SSH"
+    }
+  },
+  "monitoredBy": {
+    "id": "3wYi0Am7KUn5j3xV",
+    "name": "JARVIS Monitor v1.3",
+    "description": "Monitor com auto-correção e relatórios"
+  },
+  "stickyNotes": [
+    "📌 JARVIS v3 - Info (documentação principal)",
+    "📌 Telegram Input (fluxo de audio/imagem/texto)",
+    "📌 Chat Input (interface n8n)",
+    "📌 AI Agent (modelo, memoria, tool)",
+    "📌 Output (roteamento Telegram/Chat)"
+  ],
+  "repository": "https://github.com/lldonha/Claude_code_lucas"
 }

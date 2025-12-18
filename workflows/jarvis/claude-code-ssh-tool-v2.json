@@ -1,0 +1,59 @@
+{
+  "name": "Claude Code SSH Tool v2",
+  "id": "PAHq9uOzVd8l9ybX",
+  "description": "Sub-workflow que executa comandos no Claude Code CLI via SSH",
+  "version": "2.0.0",
+  "createdAt": "2025-12-17T01:52:56.867Z",
+  "updatedAt": "2025-12-18T00:02:05.898Z",
+  "type": "sub-workflow",
+  "features": [
+    "🔧 Executa Claude Code CLI via SSH",
+    "🔐 Gerenciamento automático de session_id",
+    "📤 Formatação de output padronizada",
+    "⚡ Escape automático de caracteres especiais"
+  ],
+  "input": {
+    "query": {
+      "type": "string",
+      "description": "Comando ou pergunta para o Claude Code",
+      "aliases": ["prompt"]
+    },
+    "session_id": {
+      "type": "string",
+      "description": "UUID da sessão (opcional, gerado automaticamente se não fornecido)",
+      "aliases": ["sessionId"]
+    }
+  },
+  "output": {
+    "success": {
+      "type": "boolean",
+      "description": "Se o comando executou com sucesso"
+    },
+    "response": {
+      "type": "string",
+      "description": "Resposta do Claude Code"
+    },
+    "error": {
+      "type": "string",
+      "description": "Mensagem de erro (se houver)"
+    },
+    "exit_code": {
+      "type": "number",
+      "description": "Código de saída do comando"
+    }
+  },
+  "calledBy": [
+    {
+      "id": "xSjW1LDJxZPMAqrU",
+      "name": "JARVIS v3 - Dual Interface + Vision"
+    },
+    {
+      "id": "3wYi0Am7KUn5j3xV",
+      "name": "JARVIS Monitor v1.3"
+    }
+  ],
+  "credentials": {
+    "ssh": "JARVIS (V4sZYDRz7ppSgxbk)"
+  },
+  "workingDirectory": "E:\\AGENTE COMPLETO"
+}
